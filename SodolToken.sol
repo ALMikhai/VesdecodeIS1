@@ -1,6 +1,25 @@
 pragma solidity ^0.4.18;
 
-contract MySuperContract {
+contract Ownable {
+    
+    address public owner;
+    
+    function Ownable() public {
+        owner = msg.sender;
+    }
+ 
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+ 
+    function transferOwnership(address newOwner) public onlyOwner {
+        owner = newOwner;
+    }
+    
+}
+
+contract MySuperContract is Ownable {
     
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
@@ -23,7 +42,7 @@ contract MySuperContract {
             balances[_to] += _value;
             Transfer(msg.sender, _to, _value);
             return true;
-        } 
+        }
         return false;
     }
     
@@ -50,10 +69,19 @@ contract MySuperContract {
         return allowed[_owner][_spender];
     }
     
-    function mint(address _to, uint _value) public {
-      assert(totalSupply + _value >= totalSupply && balances[_to] + _value >= balances[_to]);
-      balances[_to] += _value;
-      totalSupply += _value;
+    function mint(address _to, uint _value) public onlyOwner  {
+        assert(totalSupply + _value >= totalSupply && balances[_to] + _value >= balances[_to]);
+        balances[_to] += _value;
+        totalSupply += _value;
+    }
+
+    function burn(uint256 _value) public onlyOwner  {
+        totalSupply -= _value;
+        require(_value <= balances[msg.sender]);
+    
+        balances[msg.sender] = balances[msg.sender] - _value;
+        totalSupply = totalSupply - _value;
+        emit Transfer(msg.sender, address(0),_value);
     }
 
 }
